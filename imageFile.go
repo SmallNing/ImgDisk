@@ -2,55 +2,62 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"image"
 )
 
-// 最大文件
-const FILEMAXSIZE  = 4294967296-32
+// generate img max size
+const IMG_MAX_SIZE  = 4294967296
+// img RGB level
+const IMG_LEVEL  = 3
+// img file header (byte)
+const IMAGE_HEADER_SIZE  = 4
 
 type ImageFile struct {
-	File os.File
-	XMax int32
-	YMax int32
+	file []byte
+	xMax int
+	yMax int
 }
 
-func NwImageFile(file os.File,xMax int32,yMax int32) (*ImageFile,error) {
+func NewImageFile(file []byte,xMax int,yMax int) (*ImageFile,error) {
 	var result = new(ImageFile)
 	if(xMax < 1 || yMax < 1){
 		return nil,error("像素必须存在")
 	}
-	result.File = file
-	result.XMax = xMax
-	result.YMax = yMax
+	result.file = file
+	result.xMax = xMax
+	result.yMax = yMax
 	return result,nil
 }
 
-func (imageFile ImageFile) Count() (int32,error)  {
-	result,err := imageFile.File.Stat()
-	if(err != nil){
-		return -1,err
-	}else{
-		return int32(result.Size())/(imageFile.YMax*imageFile.XMax*3-32),nil
+func (imageFile ImageFile) Count() (int,error)  {
+	// use file calc image count
+	if(imageFile.file == nil){
+		return -1,error("file bytes is nil")
 	}
-	return -1,nil
+	count := len(imageFile.file)/(imageFile.xMax*imageFile.yMax*IMG_LEVEL-IMAGE_HEADER_SIZE)
+	return count,nil
 }
 
-func (imageFile ImageFile) CovertToImg(i int32) (image.Config,error) {
+func (imageFile ImageFile) covert(fileBytes []byte,i int) ([]byte,error){
+	// get []byte size
 	count,err := imageFile.Count()
 	if(err != nil){
-
+		return nil,nil
 	}
-	if(i>count){
-		return image.Config{},error("数字大于长度")
+	if(count < i){
+		return nil,error("i more than image max count")
 	}
-	img,_,err := image.DecodeConfig(&imageFile.File)
-	if(err != nil){
-		return image.Config{},err
+	fileToImgByteSize := imageFile.xMax*imageFile.yMax*IMG_LEVEL-IMAGE_HEADER_SIZE
+	startByteIndex := (i-1)*fileToImgByteSize
+	if(count == i){
+		imgBytes := imageFile.file[startByteIndex:len(imageFile.file)]
+		return imgBytes,nil
+	}else{
+		imgBytes := imageFile.file[startByteIndex:startByteIndex+fileToImgByteSize]
+		return imgBytes,nil
 	}
-	return img,nil
 }
 
+func createIm
 
 func main() {
 
