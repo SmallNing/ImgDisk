@@ -57,8 +57,6 @@ func (imageFile ImageFile) covert(fileBytes []byte,i int) ([]byte,error){
 	}
 }
 
-func createIm
-
 func main() {
 
 	fmt.Println("Hello World!")
